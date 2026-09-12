@@ -3,12 +3,16 @@ from flask import Flask, request, jsonify
 
 #sql alchemy basic
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import String, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import String, Numeric, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Enum as SQLEnum
 
 #enum
 from enum import Enum
+
+# timestamp for [created_at], [updated_at]
+from datetime import datetime
+from sqlalchemy import func
 
 #Flask_migrate
 from flask_migrate import migrate
@@ -24,6 +28,7 @@ from flask_marshmallow import Marshmallow
 
 #.env
 import os
+from decimal import Decimal
 from dotenv import load_dotenv
 
 
@@ -49,9 +54,26 @@ class UserRole(Enum):
 class Users(db.Model):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str] = mapped_column(unique=True)
     username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(700), unique=True)
     phone_number: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
     role: Mapped[UserRole] = mapped_column(SQLEnum(UserRole, name="user_role_enum"), default=UserRole.CUSTOMER)
+
+    orders_list: Mapped[list["Orders"]] = relationship(back_populates="user_ordersd")
+
+class Products(db.Model):
+    __tablename__ = "products"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    product_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    price: Mapped[Decimal] = mapped_column(Numeric(precision=10, scale=2), nullable=False)
+    stok: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[str] = mapped_column(String(1000))
+
+class Orders(db.Model):
+    __tablename__ = "orders"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now)
+
+    user_ordersd: Mapped["Users"] = relationship(back_populates="orders_list")

@@ -60,20 +60,34 @@ class Users(db.Model):
     phone_number: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
     role: Mapped[UserRole] = mapped_column(SQLEnum(UserRole, name="user_role_enum"), default=UserRole.CUSTOMER)
 
-    orders_list: Mapped[list["Orders"]] = relationship(back_populates="user_ordersd")
+    orders_list: Mapped[list["Orders"]] = relationship(back_populates="user")
 
 class Products(db.Model):
     __tablename__ = "products"
     id: Mapped[int] = mapped_column(primary_key=True)
     product_name: Mapped[str] = mapped_column(String(100), nullable=False)
     price: Mapped[Decimal] = mapped_column(Numeric(precision=10, scale=2), nullable=False)
-    stok: Mapped[str] = mapped_column(nullable=False)
+    stok: Mapped[int] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(String(1000))
+
+    products_list: Mapped[list["ProductsOrder"]] = relationship(back_populates="list_products")
 
 class Orders(db.Model):
     __tablename__ = "orders"
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
-    user_ordersd: Mapped["Users"] = relationship(back_populates="orders_list")
+    user: Mapped["Users"] = relationship(back_populates="orders_list")
+    products_order: Mapped[list["ProductsOrder"]] = relationship(back_populates="orders_items")
+
+class ProductsOrder(db.Model):
+    __tablename__ = "products_order"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    orders_id: Mapped[int] = mapped_column(ForeignKey("orders.id"))
+    products_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
+    purchase_quantity: Mapped[int] = mapped_column(nullable=False)
+    purchase_price: Mapped[Decimal]  = mapped_column(Numeric(precision=10, scale=2), nullable=False)
+
+    orders_items : Mapped["Orders"] = relationship(back_populates="products_order")
+    list_products: Mapped["Products"] = relationship(back_populates="products_list")

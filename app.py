@@ -44,12 +44,23 @@ db_secret_key = os.getenv("SECRET_KEY")
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
 app.config['SECRET_KEY'] = db_secret_key
+
 db = SQLAlchemy(app)
+migrate = migrate(app, db)
 
 class UserRole(Enum):
     ADMIN = "admin"
     CUSTOMER = "customer"
     SELLER = "seller"
+
+class StatusOrder(Enum):
+    PENDING = "pending"
+    PAID = "paid"
+    PROCESSING = "processing"
+    SHIPPED = "shipped"
+    DELIVERED = "delivered"
+    CANCELLED = "cancelled"
+    REFUNDED = "refunded"
 
 class Users(db.Model):
     __tablename__ = "users"
@@ -70,19 +81,20 @@ class Products(db.Model):
     stok: Mapped[int] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(String(1000))
 
-    products_list: Mapped[list["ProductsOrder"]] = relationship(back_populates="list_products")
+    products_list: Mapped[list["ProductsOrders"]] = relationship(back_populates="list_products")
 
 class Orders(db.Model):
     __tablename__ = "orders"
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    status: Mapped[StatusOrder] = mapped_column(SQLEnum(StatusOrder, name="Status_Order_enum"), default=StatusOrder.PENDING)
 
     user: Mapped["Users"] = relationship(back_populates="orders_list")
-    products_order: Mapped[list["ProductsOrder"]] = relationship(back_populates="orders_items")
+    products_order: Mapped[list["ProductsOrders"]] = relationship(back_populates="orders_items")
 
-class ProductsOrder(db.Model):
-    __tablename__ = "products_order"
+class ProductsOrders(db.Model):
+    __tablename__ = "products_orders"
     id: Mapped[int] = mapped_column(primary_key=True)
     orders_id: Mapped[int] = mapped_column(ForeignKey("orders.id"))
     products_id: Mapped[int] = mapped_column(ForeignKey("products.id"))

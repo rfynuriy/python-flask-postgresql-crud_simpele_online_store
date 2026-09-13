@@ -15,7 +15,7 @@ from datetime import datetime
 from sqlalchemy import func
 
 #Flask_migrate
-from flask_migrate import migrate
+from flask_migrate import Migrate
 
 #JWT
 from flask_jwt_extended import create_access_token
@@ -46,7 +46,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{db_user}:{db_password}@{
 app.config['SECRET_KEY'] = db_secret_key
 
 db = SQLAlchemy(app)
-migrate = migrate(app, db)
+migrate = Migrate(app, db)
 
 class UserRole(Enum):
     ADMIN = "admin"
@@ -103,3 +103,6 @@ class ProductsOrders(db.Model):
 
     orders_items : Mapped["Orders"] = relationship(back_populates="products_order")
     list_products: Mapped["Products"] = relationship(back_populates="products_list")
+
+if __name__ == '__main__':
+    app.run(debug=True)

@@ -1,5 +1,6 @@
 #Flask
 from flask import Flask, request, jsonify
+from flask_bcrypt import Bcrypt
 
 #sql alchemy basic
 from flask_sqlalchemy import SQLAlchemy
@@ -33,6 +34,7 @@ from dotenv import load_dotenv
 
 
 app = Flask(__name__)
+bcrypt = Bcrypt(app)
 
 load_dotenv()
 db_user = os.getenv("DB_USER")
@@ -103,6 +105,27 @@ class ProductsOrders(db.Model):
 
     orders_items : Mapped["Orders"] = relationship(back_populates="products_order")
     list_products: Mapped["Products"] = relationship(back_populates="products_list")
+
+@app.route("/register", methods=["POST"])
+def register():
+    data = request.get_json()
+    username = data["username"]
+    email = data["email"]
+    before_pw_hash = data["password_hash"]
+    phone_number = data["phone_number"]
+    after_pw_hash = bcrypt.generate_password_hash(before_pw_hash).decode("utf-8")
+    results = Users(
+        username=username,
+        email=email,
+        password_hash=after_pw_hash,
+        phone_number=phone_number
+        )
+    db.session.add(results)
+    db.session.commit()
+    return jsonify({"massage": "User JSON data successfully saved!"})
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

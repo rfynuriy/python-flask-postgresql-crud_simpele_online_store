@@ -19,10 +19,7 @@ from sqlalchemy import func
 from flask_migrate import Migrate
 
 #JWT
-from flask_jwt_extended import create_access_token
-from flask_jwt_extended import get_jwt_identity
-from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager, get_jwt
 
 #Marshmallow
 from flask_marshmallow import Marshmallow
@@ -49,6 +46,9 @@ app.config['SECRET_KEY'] = db_secret_key
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+#instalasi jwt
+app.config["JWT_SECRET_KEY"] = db_secret_key
+jwt = JWTManager(app)
 
 class UserRole(Enum):
     ADMIN = "admin"
@@ -122,7 +122,59 @@ def register():
         )
     db.session.add(results)
     db.session.commit()
-    return jsonify({"massage": "User JSON data successfully saved!"})
+    return jsonify({"message": "User JSON data successfully saved!"})
+
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    username = data["username"]
+    raw_password = data["password"]
+
+    user = Users.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({"message": "Incorrect username or password"}), 401
+    if bcrypt.check_password_hash(user.password_hash, raw_password):
+        user_id_string = str(user.id) # identity
+        custom_claims = {"role" : user.role.name} # yang dibawa oleh identity
+        access_token = create_access_token(identity=user_id_string, additional_claims=custom_claims)
+        return jsonify({"access_token": access_token}), 200
+    else:
+        return jsonify({"message": "Incorrect username or password"}), 401
+
+@app.route("/change/role/<int:Target_ID>", methods=["PUT"])
+@jwt_required()
+def role_change(Target_ID):
+    current_user_id = get_jwt_identity() # ambil identity (hanya id yang ada disini)
+    current_user = Users.query.get(current_user_id)
+    current_user_role = current_user.role.name
+
+    target = Users.query.get(Target_ID)
+    if not target:
+        return jsonify({"message": "User not found"}), 404
+
+    data = request.get_json()
+    input_role = data["role"].upper()
+
+    if input_role == "ADMIN" and current_user_role != "ADMIN":
+        return jsonify({"message": "You do not have the right to this."}), 403
+    if int(current_user_id) != Target_ID and current_user_role != "ADMIN":
+        return jsonify({"message": "You do not have the right to change another user's role."}), 403
+
+    try:
+        enum_restrictions = UserRole[input_role]
+        target.role = enum_restrictions
+        db.session.commit()
+
+        if input_role == "CUSTOMER":
+            return jsonify({"message" : "success!", "target": Target_ID, "role":"customer"})
+        if input_role == "SELLER":
+            return jsonify({"message" : "success!", "target": Target_ID, "role":"seller"})
+        else:
+            return jsonify({"message" : "success!", "target": Target_ID, "role":"admin"})
+    except KeyError:
+        return jsonify({"message" : "You have to type 'SELLER' or 'CUSTOMER'."}), 400
+
+
 
 
 

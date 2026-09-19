@@ -83,7 +83,7 @@ class Products(db.Model):
     product_name: Mapped[str] = mapped_column(String(100), nullable=False)
     price: Mapped[Decimal] = mapped_column(Numeric(precision=10, scale=2), nullable=False)
     stok: Mapped[int] = mapped_column(nullable=False)
-    description: Mapped[str] = mapped_column(String(1000))
+    description: Mapped[str] = mapped_column(String(1000), nullable=True)
 
     seller_products: Mapped["Users"] = relationship(back_populates="list_products_seller")
     products_list: Mapped[list["ProductsOrders"]] = relationship(back_populates="list_products")
@@ -177,9 +177,37 @@ def role_change(Target_ID):
     except KeyError:
         return jsonify({"message" : "You have to type 'SELLER' or 'CUSTOMER'."}), 400
 
+@app.route("/add/product", methods=["POST"])
+@jwt_required()
+def add_product():
+    data = request.get_json()
+    current_user_id = get_jwt_identity()
+    current_user = Users.query.get(current_user_id)
+    current_user_role = current_user.role.name
 
+    if current_user_role != "SELLER":
+        return jsonify({"message eror": "You are not a seller"}), 403
 
+    product_name = data["product_name"]
+    price = data["price"]
+    stok = data["stok"]
+    description = data.get("description")
 
+    results = Products(
+        seller_id=current_user_id,
+        product_name=product_name,
+        price=float(price),
+        stok=stok,
+        description=description
+        )
+    db.session.add(results)
+    db.session.commit()
+    return jsonify({"message":"Product successfully added.",
+                    "product_name":product_name,
+                    "price":price,
+                    "stok":stok,
+                    "description":description
+                    })
 
 
 if __name__ == '__main__':

@@ -73,16 +73,19 @@ class Users(db.Model):
     phone_number: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
     role: Mapped[UserRole] = mapped_column(SQLEnum(UserRole, name="user_role_enum"), default=UserRole.CUSTOMER)
 
+    list_products_seller: Mapped[list["Products"]] = relationship(back_populates="seller_products")
     orders_list: Mapped[list["Orders"]] = relationship(back_populates="user")
 
 class Products(db.Model):
     __tablename__ = "products"
     id: Mapped[int] = mapped_column(primary_key=True)
+    seller_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     product_name: Mapped[str] = mapped_column(String(100), nullable=False)
     price: Mapped[Decimal] = mapped_column(Numeric(precision=10, scale=2), nullable=False)
     stok: Mapped[int] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(String(1000))
 
+    seller_products: Mapped["Users"] = relationship(back_populates="list_products_seller")
     products_list: Mapped[list["ProductsOrders"]] = relationship(back_populates="list_products")
 
 class Orders(db.Model):

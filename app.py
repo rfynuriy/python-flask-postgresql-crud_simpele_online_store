@@ -186,7 +186,7 @@ def add_product():
     current_user_role = current_user.role.name
 
     if current_user_role != "SELLER":
-        return jsonify({"message eror": "You are not a seller"}), 403
+        return jsonify({"message": "You are not a seller"}), 403
 
     product_name = data["product_name"]
     price = data["price"]
@@ -208,6 +208,22 @@ def add_product():
                     "stok":stok,
                     "description":description
                     })
+
+@app.route("/view/products", methods=["GET"])
+def view_products():
+    retrieve_product_data = Products.query.all()
+    results = []
+    for i in retrieve_product_data:
+        results.append({
+            "seller": i.seller_products.username,
+            "product_name": i.product_name,
+            "price": i.price,
+            "stok": i.stok,
+            "description": i.description
+        })
+    return jsonify(results)
+
+@app.route("/checkout", methods=[""])
 
 
 if __name__ == '__main__':

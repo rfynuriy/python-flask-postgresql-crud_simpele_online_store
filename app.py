@@ -272,5 +272,39 @@ def checkout():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
+@app.route("/View/My/Order/History", methods=["GET"])
+@jwt_required()
+def order_history():
+    current_user_id = get_jwt_identity()
+    user_orders= Orders.query.filter_by(user_id=current_user_id).order_by(Orders.created_at.desc()).all()
+
+    orders_data= []
+    for order in user_orders:
+        items_list = []
+        for item in order.products_order:
+            items_list.append({
+                "products_name": item.list_products.product_name,
+                "quantity": item.purchase_quantity,
+                "price": float(item.purchase_price),
+                "subtotal": float(item.purchase_quantity * item.purchase_price)
+            })
+
+        total_price_order= sum(item["subtotal"] for item in items_list)
+        orders_data.append({
+            "order_id": order.id,
+            "order_status": order.status.name,
+            "created_at": order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            "total_items": len(items_list),
+            "total_price": total_price_order,
+            "items": items_list
+        })
+
+    return jsonify({
+        "message": "success",
+        "orders_quantity": len(user_orders),
+        "my_orders": orders_data
+    })
+
+
 if __name__ == '__main__':
     app.run(debug=True)

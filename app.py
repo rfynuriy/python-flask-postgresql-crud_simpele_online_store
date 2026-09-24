@@ -22,7 +22,7 @@ from flask_migrate import Migrate
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager, get_jwt
 
 #Marshmallow
-from flask_marshmallow import Marshmallow
+from marshmallow import Schema, fields, validate
 
 #.env
 import os
@@ -108,6 +108,18 @@ class ProductsOrders(db.Model):
 
     orders_items : Mapped["Orders"] = relationship(back_populates="products_order")
     list_products: Mapped["Products"] = relationship(back_populates="products_list")
+
+
+class ListOfItemsForCheckout(Schema):
+    products_id = fields.Int(required=True, validate=validate.Range(min=1, error="Product ID must be greater than 0"))
+    quantity = fields.Int(required=True, validate=validate.Range(min=1, error="minimum purchase amount must be more than 1"))
+
+class CheckoutSchema(Schema):
+    items = fields.List(
+        fields.Nested(ListOfItemsForCheckout),
+        required=True
+    )
+
 
 @app.route("/register", methods=["POST"])
 def register():
@@ -230,6 +242,10 @@ class InsufficientStockError(Exception):
 def checkout():
     data = request.get_json()
     current_user_id = get_jwt_identity()
+    schema= CheckoutSchema()
+    error= schema.validate(data)
+    if error:
+        return jsonify(error), 400
     items = data["items"]
 
     try:
@@ -272,7 +288,7 @@ def checkout():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-@app.route("/View/My/Order/History", methods=["GET"])
+@app.route("/my/order", methods=["GET"])
 @jwt_required()
 def order_history():
     current_user_id = get_jwt_identity()

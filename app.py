@@ -4,7 +4,7 @@ from flask_bcrypt import Bcrypt
 
 #sql alchemy basic
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import String, Numeric, ForeignKey
+from sqlalchemy import String, Numeric, ForeignKey, select
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Enum as SQLEnum
 
@@ -145,7 +145,7 @@ def login():
     username = data["username"]
     raw_password = data["password"]
 
-    user = Users.query.filter_by(username=username).first()
+    user = db.session.scalar(select(Users).filter_by(username=username))
     if not user:
         return jsonify({"message": "Incorrect username or password"}), 401
     if bcrypt.check_password_hash(user.password_hash, raw_password):
@@ -160,10 +160,10 @@ def login():
 @jwt_required()
 def role_change(Target_ID):
     current_user_id = get_jwt_identity() # ambil identity (hanya id yang ada disini)
-    current_user = Users.query.get(current_user_id)
+    current_user = db.session.get(Users, current_user_id)
     current_user_role = current_user.role.name
 
-    target = Users.query.get(Target_ID)
+    target = db.session.get(Users, Target_ID)
     if not target:
         return jsonify({"message": "User not found"}), 404
 
@@ -194,7 +194,7 @@ def role_change(Target_ID):
 def add_product():
     data = request.get_json()
     current_user_id = get_jwt_identity()
-    current_user = Users.query.get(current_user_id)
+    current_user = db.session.get(Users, current_user_id)
     current_user_role = current_user.role.name
 
     if current_user_role != "SELLER":
@@ -223,7 +223,7 @@ def add_product():
 
 @app.route("/view/products", methods=["GET"])
 def view_products():
-    retrieve_product_data = Products.query.all()
+    retrieve_product_data = db.session.scalars(select(Products)).all()
     results = []
     for i in retrieve_product_data:
         results.append({
@@ -258,7 +258,7 @@ def checkout():
             products_id = item["products_id"]
             quantity = item["quantity"]
 
-            product = Products.query.get(products_id)
+            product = db.session.get(Products, products_id)
             if not product:
                 raise Exception(f"Product with ID {products_id} was not found.")
             if product.stok < quantity:
@@ -292,7 +292,8 @@ def checkout():
 @jwt_required()
 def order_history():
     current_user_id = get_jwt_identity()
-    user_orders= Orders.query.filter_by(user_id=current_user_id).order_by(Orders.created_at.desc()).all()
+    statement =select(Orders).filter_by(user_id=current_user_id).order_by(Orders.created_at.desc())
+    user_orders= db.session.scalars(statement).all()
 
     orders_data= []
     for order in user_orders:

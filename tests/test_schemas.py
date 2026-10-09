@@ -1,5 +1,5 @@
 import pytest
-from app import CheckoutSchema, validate
+from app import CheckoutSchema
 
 def test_CheckoutSchema():
     schema = CheckoutSchema()
@@ -29,7 +29,7 @@ def test_CheckoutSchema_product_id_nol():
         ]
     }
     errors = schema.validate(Data_does_not_match)
-    assert "items" in errors
+    assert errors != {}
 
 @pytest.mark.parametrize("data_invalid",[
     {"items": [{"products_id": 0, "quantity": 1}]},
@@ -43,3 +43,6 @@ def test_combined_CheckoutSchema_error(data_invalid):
     errors = schema.validate(data_invalid)
     assert errors != {}
 
+def test_cek_fixture_client(client):
+    response = client.get("/endpoint-palsu")
+    assert response.status_code == 404

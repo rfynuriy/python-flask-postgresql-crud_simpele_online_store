@@ -1,12 +1,15 @@
+import os
 import pytest
+os.environ["DB_NAME"] = "simpleonlinestore_test"
+
 from app import app, db, bcrypt, Users, UserRole
 
 
 @pytest.fixture
 def client():
     app.config['TESTING'] = True
-    app.config['SQLACHEMY_DATABASE_URI'] = 'sqlite///:memory:'
-
+    assert app.config["SQLALCHEMY_DATABASE_URI"].endswith("_test"), \
+        "STOP: ini bukan database test!"
     with app.test_client() as client:
         with app.app_context():
             db.create_all()
@@ -25,6 +28,6 @@ def dummy_user(client):
         role= UserRole.ADMIN
     )
     db.session.add(user)
-    db.session.commit
+    db.session.commit()
     return user
 

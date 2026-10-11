@@ -1,9 +1,8 @@
-from app import bcrypt
-
+#test register
 def test_regiter_user_succses(client):
     pyload = {
         "username": "rfynury",
-        "email": "rafiemail@gmail.com",
+        "email": "rafiemailgmail.com",
         "password_hash": "dj_almira_berto1",
         "phone_number": "089527358614",
     }
@@ -14,6 +13,8 @@ def test_regiter_user_succses(client):
     # or
     assert "User" in response.json["message"]
 
+
+#login
 def test_login_succses(client, dummy_user):
     pyload = {
         "username": dummy_user.username,
@@ -23,3 +24,23 @@ def test_login_succses(client, dummy_user):
 
     assert resposnse.status_code == 200
     assert "access_token" in resposnse.json
+
+def test_incorrect_login_password(client, dummy_user):
+    pyload = {
+        "username": dummy_user.username,
+        "password": "pwsalah"
+    }
+    response = client.post("/login", json=pyload)
+
+    assert response.status_code == 401
+    assert response.json["message"] == "Incorrect username or password"
+
+def test_unregistered_login_username(client):
+    pyload = {
+        "username": "unregistered username!",
+        "password": "rahasia123"
+    }
+    respose = client.post("/login", json=pyload)
+
+    assert respose.status_code == 401
+    assert respose.json["message"] == "Incorrect username or password"

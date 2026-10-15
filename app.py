@@ -19,35 +19,20 @@ from sqlalchemy import func
 from flask_migrate import Migrate
 
 #JWT
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager, get_jwt
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager
 
 #Marshmallow
 from marshmallow import Schema, fields, validate
 
-#.env
-import os
 from decimal import Decimal
-from dotenv import load_dotenv
 
+from config import DevelopmentConfig
 
 app = Flask(__name__)
+app.config.from_object(DevelopmentConfig)
 bcrypt = Bcrypt(app)
-
-load_dotenv()
-db_user = os.getenv("DB_USER")
-db_password = os.getenv("DB_PASSWORD")
-db_host = os.getenv("DB_HOST")
-db_port = os.getenv("DB_PORT")
-db_name = os.getenv("DB_NAME")
-db_secret_key = os.getenv("SECRET_KEY")
-
-app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
-app.config['SECRET_KEY'] = db_secret_key
-
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-#instalasi jwt
-app.config["JWT_SECRET_KEY"] = db_secret_key
 jwt = JWTManager(app)
 
 class UserRole(Enum):

@@ -2,16 +2,7 @@
 from flask import Flask, request, jsonify
 
 #sql alchemy basic
-from sqlalchemy import String, Numeric, ForeignKey, select
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Enum as SQLEnum
-
-#enum
-from enum import Enum
-
-# timestamp for [created_at], [updated_at]
-from datetime import datetime
-from sqlalchemy import func
+from sqlalchemy import select
 
 #JWT
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
@@ -19,10 +10,9 @@ from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_requir
 #Marshmallow
 from marshmallow import Schema, fields, validate
 
-from decimal import Decimal
-
 from config import DevelopmentConfig
 from extensions import bcrypt, db, migrate, jwt
+from models import Users, UserRole, Products, Orders, ProductsOrders
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
@@ -30,66 +20,6 @@ bcrypt.init_app(app)
 db.init_app(app)
 migrate.init_app(app, db)
 jwt.init_app(app)
-
-class UserRole(Enum):
-    ADMIN = "admin"
-    CUSTOMER = "customer"
-    SELLER = "seller"
-
-class StatusOrder(Enum):
-    PENDING = "pending"
-    PAID = "paid"
-    PROCESSING = "processing"
-    SHIPPED = "shipped"
-    DELIVERED = "delivered"
-    CANCELLED = "cancelled"
-    REFUNDED = "refunded"
-
-class Users(db.Model):
-    __tablename__ = "users"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
-    email: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
-    password_hash: Mapped[str] = mapped_column(String(700), unique=True)
-    phone_number: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
-    role: Mapped[UserRole] = mapped_column(SQLEnum(UserRole, name="user_role_enum"), default=UserRole.CUSTOMER)
-
-    list_products_seller: Mapped[list["Products"]] = relationship(back_populates="seller_products")
-    orders_list: Mapped[list["Orders"]] = relationship(back_populates="user")
-
-class Products(db.Model):
-    __tablename__ = "products"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    seller_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    product_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    price: Mapped[Decimal] = mapped_column(Numeric(precision=10, scale=2), nullable=False)
-    stok: Mapped[int] = mapped_column(nullable=False)
-    description: Mapped[str] = mapped_column(String(1000), nullable=True)
-
-    seller_products: Mapped["Users"] = relationship(back_populates="list_products_seller")
-    products_list: Mapped[list["ProductsOrders"]] = relationship(back_populates="list_products")
-
-class Orders(db.Model):
-    __tablename__ = "orders"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
-    status: Mapped[StatusOrder] = mapped_column(SQLEnum(StatusOrder, name="Status_Order_enum"), default=StatusOrder.PENDING)
-
-    user: Mapped["Users"] = relationship(back_populates="orders_list")
-    products_order: Mapped[list["ProductsOrders"]] = relationship(back_populates="orders_items")
-
-class ProductsOrders(db.Model):
-    __tablename__ = "products_orders"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    orders_id: Mapped[int] = mapped_column(ForeignKey("orders.id"))
-    products_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
-    purchase_quantity: Mapped[int] = mapped_column(nullable=False)
-    purchase_price: Mapped[Decimal]  = mapped_column(Numeric(precision=10, scale=2), nullable=False)
-
-    orders_items : Mapped["Orders"] = relationship(back_populates="products_order")
-    list_products: Mapped["Products"] = relationship(back_populates="products_list")
-
 
 class ListOfItemsForCheckout(Schema):
     products_id = fields.Int(required=True, validate=validate.Range(min=1, error="Product ID must be greater than 0"))

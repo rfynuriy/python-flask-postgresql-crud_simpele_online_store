@@ -1,9 +1,7 @@
 #Flask
 from flask import Flask, request, jsonify
-from flask_bcrypt import Bcrypt
 
 #sql alchemy basic
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String, Numeric, ForeignKey, select
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Enum as SQLEnum
@@ -15,11 +13,8 @@ from enum import Enum
 from datetime import datetime
 from sqlalchemy import func
 
-#Flask_migrate
-from flask_migrate import Migrate
-
 #JWT
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, JWTManager
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 
 #Marshmallow
 from marshmallow import Schema, fields, validate
@@ -27,13 +22,14 @@ from marshmallow import Schema, fields, validate
 from decimal import Decimal
 
 from config import DevelopmentConfig
+from extensions import bcrypt, db, migrate, jwt
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
-bcrypt = Bcrypt(app)
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
-jwt = JWTManager(app)
+bcrypt.init_app(app)
+db.init_app(app)
+migrate.init_app(app, db)
+jwt.init_app(app)
 
 class UserRole(Enum):
     ADMIN = "admin"

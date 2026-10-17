@@ -13,7 +13,7 @@ from models import Users, UserRole, Products, Orders, ProductsOrders
 from schemas import CheckoutSchema
 from errors import InsufficientStockError
 
-from routes import auth_bp, users_bp
+from routes import auth_bp, users_bp, products_bp
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
@@ -24,52 +24,7 @@ jwt.init_app(app)
 
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(users_bp, url_prefix='/users')
-
-@app.route("/add/product", methods=["POST"])
-@jwt_required()
-def add_product():
-    data = request.get_json()
-    current_user_id = get_jwt_identity()
-    current_user = db.session.get(Users, current_user_id)
-    current_user_role = current_user.role.name
-
-    if current_user_role != "SELLER":
-        return jsonify({"message": "You are not a seller"}), 403
-
-    product_name = data["product_name"]
-    price = data["price"]
-    stok = data["stok"]
-    description = data.get("description")
-
-    results = Products(
-        seller_id=current_user_id,
-        product_name=product_name,
-        price=float(price),
-        stok=stok,
-        description=description
-        )
-    db.session.add(results)
-    db.session.commit()
-    return jsonify({"message":"Product successfully added.",
-                    "product_name":product_name,
-                    "price":price,
-                    "stok":stok,
-                    "description":description
-                    })
-
-@app.route("/view/products", methods=["GET"])
-def view_products():
-    retrieve_product_data = db.session.scalars(select(Products)).all()
-    results = []
-    for i in retrieve_product_data:
-        results.append({
-            "seller": i.seller_products.username,
-            "product_name": i.product_name,
-            "price": i.price,
-            "stok": i.stok,
-            "description": i.description
-        })
-    return jsonify(results)
+app.register_blueprint(products_bp, url_prefix='/products')
 
 @app.route("/checkout", methods=["POST"])
 @jwt_required()

@@ -7,12 +7,11 @@ from sqlalchemy import select
 #JWT
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 
-#Marshmallow
-from marshmallow import Schema, fields, validate
-
 from config import DevelopmentConfig
 from extensions import bcrypt, db, migrate, jwt
 from models import Users, UserRole, Products, Orders, ProductsOrders
+from schemas import CheckoutSchema
+from errors import InsufficientStockError
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
@@ -20,16 +19,6 @@ bcrypt.init_app(app)
 db.init_app(app)
 migrate.init_app(app, db)
 jwt.init_app(app)
-
-class ListOfItemsForCheckout(Schema):
-    products_id = fields.Int(required=True, validate=validate.Range(min=1, error="Product ID must be greater than 0"))
-    quantity = fields.Int(required=True, validate=validate.Range(min=1, error="minimum purchase amount must be more than 1"))
-
-class CheckoutSchema(Schema):
-    items = fields.List(
-        fields.Nested(ListOfItemsForCheckout),
-        required=True
-    )
 
 
 @app.route("/register", methods=["POST"])
@@ -146,8 +135,6 @@ def view_products():
         })
     return jsonify(results)
 
-class InsufficientStockError(Exception):
-    pass
 @app.route("/checkout", methods=["POST"])
 @jwt_required()
 def checkout():

@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import Enum
 from decimal import Decimal
 
-from extensions import db
+from app.extensions import db
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

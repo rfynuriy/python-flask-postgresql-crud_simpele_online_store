@@ -2,12 +2,12 @@ from flask import jsonify, request, Blueprint
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy import select
 
-from models import Orders, Products, ProductsOrders
-from extensions import db
-from schemas import CheckoutSchema
-from errors import InsufficientStockError
+from app.models import Orders, Products, ProductsOrders
+from app.extensions import db
+from app.schemas import CheckoutSchema
+from app.errors import InsufficientStockError
 
-orders_bp = Blueprint('orsers', __name__)
+orders_bp = Blueprint('orders', __name__)
 
 @orders_bp.route("/checkout", methods=["POST"])
 @jwt_required()

@@ -3,7 +3,7 @@ from sqlalchemy import String, Numeric, ForeignKey
 
 from decimal import Decimal
 
-from extensions import db
+from app.extensions import db
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

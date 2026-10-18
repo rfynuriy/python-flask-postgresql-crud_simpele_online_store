@@ -3,7 +3,7 @@ from sqlalchemy import String, Enum as SQLEnum
 
 from enum import Enum
 
-from extensions import db
+from app.extensions import db
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

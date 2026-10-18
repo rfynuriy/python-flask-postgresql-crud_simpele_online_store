@@ -2,8 +2,8 @@ from flask import jsonify, request, Blueprint
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy import select
 
-from models import Users, Products
-from extensions import db
+from app.models import Users, Products
+from app.extensions import db
 
 products_bp = Blueprint('products', __name__)
 

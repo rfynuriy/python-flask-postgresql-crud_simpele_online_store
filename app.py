@@ -13,10 +13,10 @@ db.init_app(app)
 migrate.init_app(app, db)
 jwt.init_app(app)
 
-app.register_blueprint(auth_bp, url_prefix='/auth')
-app.register_blueprint(users_bp, url_prefix='/users')
-app.register_blueprint(products_bp, url_prefix='/products')
-app.register_blueprint(orders_bp, url_prefix='/orders')
+app.register_blueprint(auth_bp)
+app.register_blueprint(users_bp)
+app.register_blueprint(products_bp)
+app.register_blueprint(orders_bp)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,5 +1,5 @@
 import pytest
-from app import CheckoutSchema
+from schemas import CheckoutSchema
 
 def test_CheckoutSchema():
     schema = CheckoutSchema()

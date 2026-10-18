@@ -2,8 +2,9 @@ import os
 import pytest
 os.environ["DB_NAME"] = "simpleonlinestore_test"
 
-from app import app, db, bcrypt, Users, UserRole
-
+from extensions import db, bcrypt
+from app import app
+from models import Users, UserRole
 
 @pytest.fixture
 def client():

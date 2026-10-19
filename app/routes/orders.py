@@ -2,10 +2,11 @@ from flask import jsonify, request, Blueprint
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy import select
 
-from app.models import Orders, Products, ProductsOrders
+from app.models import Orders
 from app.extensions import db
 from app.schemas import CheckoutSchema
-from app.errors import InsufficientStockError
+from app.errors import InsufficientStockError, ProductNotFoundError
+from app.services import create_order
 
 orders_bp = Blueprint('orders', __name__)
 
@@ -19,46 +20,21 @@ def checkout():
     if error:
         return jsonify(error), 400
     items = data["items"]
-
     try:
-        new_order = Orders(user_id=current_user_id)
-        db.session.add(new_order)
-
-        db.session.flush()
-
-        for item in items:
-            products_id = item["products_id"]
-            quantity = item["quantity"]
-
-            product = db.session.get(Products, products_id)
-            if not product:
-                raise Exception(f"Product with ID {products_id} was not found.")
-            if product.stok < quantity:
-                raise InsufficientStockError("I apologize, but there is insufficient stock.")
-
-            product.stok = product.stok-quantity
-
-            detail_order = ProductsOrders(
-                orders_id= new_order.id,
-                products_id= product.id,
-                purchase_quantity= quantity,
-                purchase_price= float(product.price)
-            )
-            db.session.add(detail_order)
-
-        db.session.commit()
+        order = create_order(current_user_id, items)
         return jsonify({
             "message": "Checkout berhasil!",
-            "order_id": new_order.id,
+            "order_id": order.id,
             "detail_order": items
             }), 200
 
+    except ProductNotFoundError as e:
+        return jsonify({"error": str(e)}), 404
     except InsufficientStockError as e:
-        db.session.rollback()
         return jsonify({"error": str(e)}), 400
     except Exception as e:
-        db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
 
 @orders_bp.route("/my/order", methods=["GET"])
 @jwt_required()

@@ -5,19 +5,22 @@ from config import TestingConfig
 from app import create_app
 from app.models import Users, UserRole
 
-app = create_app(TestingConfig)
+
 
 @pytest.fixture
-def client():
-    app.config['TESTING'] = True
+def app():
+    app = create_app(TestingConfig)
     assert app.config["SQLALCHEMY_DATABASE_URI"].endswith("_test"), \
-        "STOP: ini bukan database test!"
-    with app.test_client() as client:
-        with app.app_context():
-            db.create_all()
-            yield client
-            db.session.remove()
-            db.drop_all()
+            "STOP: ini bukan database test!"
+    with app.app_context():
+        db.create_all()
+        yield app
+        db.session.remove()
+        db.drop_all()
+
+@pytest.fixture
+def client(app):
+    return app.test_client()
 
 @pytest.fixture
 def dummy_user(client):

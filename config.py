@@ -22,5 +22,15 @@ class DevelopmentConfig(Config):
 
     SQLALCHEMY_DATABASE_URI = f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
 
+class TestingConfig(Config):
+    TESTING = True
+    db_user = os.getenv("DB_USER")
+    db_password = os.getenv("DB_PASSWORD")
+    db_host = os.getenv("DB_HOST")
+    db_port = os.getenv("DB_PORT")
+    db_name = "simpleonlinestore_test"
+
+    SQLALCHEMY_DATABASE_URI = f'postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
+
 class ProductionConfig(Config):
     pass

@@ -6,8 +6,8 @@ from app.errors import InsufficientStockError, ProductNotFoundError
 import pytest
 
 
-def test_order_service(dummy_product, dummy_user):
-    user_id = dummy_user.id
+def test_order_service(dummy_product, dummy_user_customer):
+    user_id = dummy_user_customer.id
     pyload = [
         {
             "products_id": dummy_product.id,
@@ -20,8 +20,8 @@ def test_order_service(dummy_product, dummy_user):
     db.session.refresh(dummy_product)
     assert dummy_product.stok == 9
 
-def test_out_of_stok_order_service(dummy_product, dummy_user,):
-    user_id = dummy_user.id
+def test_out_of_stok_order_service(dummy_product, dummy_user_customer,):
+    user_id = dummy_user_customer.id
     pyload = [
         {
             "products_id": dummy_product.id,
@@ -36,8 +36,8 @@ def test_out_of_stok_order_service(dummy_product, dummy_user,):
     all_orders= db.session.scalars(select(Orders)).all()
     assert len(all_orders) == 0
 
-def test_product_not_found_order_service(dummy_product, dummy_user,):
-    user_id = dummy_user.id
+def test_product_not_found_order_service(dummy_product, dummy_user_customer,):
+    user_id = dummy_user_customer.id
     pyload = [
         {
             "products_id": 100,

@@ -23,27 +23,41 @@ def client(app):
     return app.test_client()
 
 @pytest.fixture
-def dummy_user(app):
+def dummy_user_admin(app):
     password_hash = bcrypt.generate_password_hash("rahasia123").decode("utf-8")
-    user = Users(
+    admin = Users(
         username= "rfynuriy",
-        email= "hairafi@gmail.com",
+        email= "admin_ganteng@gmail.com",
         password_hash= password_hash,
-        phone_number= "089527358614",
+        phone_number= "081111111111",
         role= UserRole.ADMIN
     )
-    db.session.add(user)
+    db.session.add(admin)
     db.session.commit()
-    return user
+    return admin
 
 @pytest.fixture
-def dummy_seller(app):
+def dummy_user_customer(app):
+    password_hash = bcrypt.generate_password_hash("rahasia123").decode("utf-8")
+    customer = Users(
+        username= "dummy_customer",
+        email= "custommer@gmail.com",
+        password_hash= password_hash,
+        phone_number= "081111111112",
+        role= UserRole.CUSTOMER
+    )
+    db.session.add(customer)
+    db.session.commit()
+    return customer
+
+@pytest.fixture
+def dummy_user_seller(app):
     password_hash = bcrypt.generate_password_hash("rahasia123").decode("utf-8")
     seller = Users(
-        username= "seller_mandi",
+        username= "dummy_seller",
         email= "alat_mandi@gmail.com",
         password_hash= password_hash,
-        phone_number= "089527358618",
+        phone_number= "08111111111113",
         role= UserRole.SELLER
     )
     db.session.add(seller)
@@ -51,14 +65,14 @@ def dummy_seller(app):
     return seller
 
 @pytest.fixture
-def dummy_product(dummy_seller):
-    product_1 = Products(
-        seller_id= dummy_seller.id,
+def dummy_product(dummy_user_seller):
+    product = Products(
+        seller_id= dummy_user_seller.id,
         product_name= "sikat_gigi",
         price= 7000,
         stok= 12,
         description= None
     )
-    db.session.add(product_1)
+    db.session.add(product)
     db.session.commit()
-    return product_1
+    return product

@@ -15,9 +15,9 @@ def test_regiter_user_succses(client):
 
 
 #login
-def test_login_succses(client, dummy_user):
+def test_login_succses(client, dummy_user_customer):
     pyload = {
-        "username": dummy_user.username,
+        "username": dummy_user_customer.username,
         "password": "rahasia123"
         }
     resposnse = client.post("/login", json=pyload)
@@ -25,9 +25,9 @@ def test_login_succses(client, dummy_user):
     assert resposnse.status_code == 200
     assert "access_token" in resposnse.json
 
-def test_incorrect_login_password(client, dummy_user):
+def test_incorrect_login_password(client, dummy_user_customer):
     pyload = {
-        "username": dummy_user.username,
+        "username": dummy_user_customer.username,
         "password": "pwsalah"
     }
     response = client.post("/login", json=pyload)

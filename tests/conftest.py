@@ -3,7 +3,7 @@ import pytest
 from app.extensions import db, bcrypt
 from config import TestingConfig
 from app import create_app
-from app.models import Users, UserRole
+from app.models import Users, UserRole, Products
 
 
 
@@ -23,7 +23,7 @@ def client(app):
     return app.test_client()
 
 @pytest.fixture
-def dummy_user(client):
+def dummy_user(app):
     password_hash = bcrypt.generate_password_hash("rahasia123").decode("utf-8")
     user = Users(
         username= "rfynuriy",
@@ -36,3 +36,29 @@ def dummy_user(client):
     db.session.commit()
     return user
 
+@pytest.fixture
+def dummy_seller(app):
+    password_hash = bcrypt.generate_password_hash("rahasia123").decode("utf-8")
+    seller = Users(
+        username= "seller_mandi",
+        email= "alat_mandi@gmail.com",
+        password_hash= password_hash,
+        phone_number= "089527358618",
+        role= UserRole.SELLER
+    )
+    db.session.add(seller)
+    db.session.commit()
+    return seller
+
+@pytest.fixture
+def dummy_product(dummy_seller):
+    product_1 = Products(
+        seller_id= dummy_seller.id,
+        product_name= "sikat_gigi",
+        price= 7000,
+        stok= 12,
+        description= None
+    )
+    db.session.add(product_1)
+    db.session.commit()
+    return product_1

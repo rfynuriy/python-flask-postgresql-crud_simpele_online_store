@@ -42,3 +42,14 @@ def test_checkout_products_not_found(client, auth_headers):
 
     assert "9999" in response.json["error"]
     assert response.status_code == 404
+
+def test_checkout_exceeding_product(client, auth_headers, dummy_product):
+    order = {
+        "products_id": dummy_product.id,
+        "quantity": 9999
+    }
+    payload = {"items": [order]}
+    response = client.post("/checkout", json=payload, headers=auth_headers)
+
+    assert "insufficient stock" in response.json["error"]
+    assert response.status_code == 400

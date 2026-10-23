@@ -21,7 +21,7 @@ def test_checkout_without_token(client, dummy_product):
     assert response.status_code == 401
     assert response.json["msg"] == "Missing Authorization Header"
 
-def test_quantity_nol(client, auth_headers, dummy_product):
+def test_checkout_quantity_nol(client, auth_headers, dummy_product):
     order = {
         "products_id": dummy_product.id,
         "quantity": 0
@@ -32,3 +32,13 @@ def test_quantity_nol(client, auth_headers, dummy_product):
     assert "items" in response.json
     assert response.status_code == 400
 
+def test_checkout_products_not_found(client, auth_headers):
+    order = {
+        "products_id": 9999,
+        "quantity": 3
+    }
+    payload = {"items": [order]}
+    response = client.post("/checkout", json=payload, headers=auth_headers)
+
+    assert "9999" in response.json["error"]
+    assert response.status_code == 404

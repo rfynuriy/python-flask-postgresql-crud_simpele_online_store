@@ -22,6 +22,8 @@ def app():
 def client(app):
     return app.test_client()
 
+# =================== DUMMY USERS =================== #
+
 @pytest.fixture
 def dummy_user_admin(app):
     password_hash = bcrypt.generate_password_hash("rahasia123").decode("utf-8")
@@ -64,6 +66,8 @@ def dummy_user_seller(app):
     db.session.commit()
     return seller
 
+# =================== DUMMY PRODUCT =================== #
+
 @pytest.fixture
 def dummy_product(dummy_user_seller):
     product = Products(
@@ -77,10 +81,11 @@ def dummy_product(dummy_user_seller):
     db.session.commit()
     return product
 
-@pytest.fixture(name="auth_customer")
-def auth_headers_customer(client, dummy_user_customer):
+# =================== AUTH HEADERS =================== #
+
+def _login_headers(client, user):
     pyload = {
-        "username": dummy_user_customer.username,
+        "username": user.username,
         "password": "rahasia123"
     }
     response = client.post("/login", json=pyload)
@@ -90,21 +95,13 @@ def auth_headers_customer(client, dummy_user_customer):
     headers = {
         "Authorization": f"Bearer {token}"
     }
-
     return headers
 
-@pytest.fixture(name="auth_seller")
-def auth_headers_seller(client, dummy_user_seller):
-    pyload = {
-        "username": dummy_user_seller.username,
-        "password": "rahasia123"
-    }
-    response = client.post("/login", json=pyload)
-    assert response.status_code == 200, "login failed"
-    token = response.get_json().get("access_token")
 
-    headers = {
-        "Authorization": f"Bearer {token}"
-    }
+@pytest.fixture
+def auth_customer(client, dummy_user_customer):
+    return _login_headers(client, dummy_user_customer)
 
-    return headers
+@pytest.fixture
+def auth_seller(client, dummy_user_seller):
+    return _login_headers(client, dummy_user_seller)

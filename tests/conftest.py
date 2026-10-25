@@ -77,10 +77,26 @@ def dummy_product(dummy_user_seller):
     db.session.commit()
     return product
 
-@pytest.fixture
-def auth_headers(client, dummy_user_customer):
+@pytest.fixture(name="auth_customer")
+def auth_headers_customer(client, dummy_user_customer):
     pyload = {
         "username": dummy_user_customer.username,
+        "password": "rahasia123"
+    }
+    response = client.post("/login", json=pyload)
+    assert response.status_code == 200, "login failed"
+    token = response.get_json().get("access_token")
+
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    return headers
+
+@pytest.fixture(name="auth_seller")
+def auth_headers_seller(client, dummy_user_seller):
+    pyload = {
+        "username": dummy_user_seller.username,
         "password": "rahasia123"
     }
     response = client.post("/login", json=pyload)

@@ -1,4 +1,4 @@
-#test register
+# =================== /register =================== #
 def test_regiter_user_succses(client):
     pyload = {
         "username": "rfynury",
@@ -13,8 +13,19 @@ def test_regiter_user_succses(client):
     # or
     assert "User" in response.json["message"]
 
+def test_register_duplicate_username(client, dummy_user_customer):
+    pyload = {
+        "username": dummy_user_customer.username,
+        "email": "userganteng@gmail.com",
+        "password_hash": "dj_kereta",
+        "phone_number": "089187358619",
+    }
+    response = client.post("/register", json=pyload)
+    assert response.status_code == 409
+    assert "message" in response.json
 
-#login
+
+# =================== /login =================== 
 def test_login_succses(client, dummy_user_customer):
     pyload = {
         "username": dummy_user_customer.username,

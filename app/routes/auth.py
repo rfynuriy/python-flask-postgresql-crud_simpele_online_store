@@ -1,6 +1,7 @@
 from flask import request, jsonify, Blueprint
 from flask_jwt_extended import create_access_token
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from app.extensions import db, bcrypt
 from app.models import Users
@@ -23,8 +24,15 @@ def register():
         phone_number=phone_number
         )
     db.session.add(results)
-    db.session.commit()
-    return jsonify({"message": "User JSON data successfully saved!"})
+
+    try:
+        db.session.commit()
+        return jsonify({"message": "User JSON data successfully saved!"}), 200
+
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"message": "Username, email, or phone number already registered"}), 409
+
 
 @auth_bp.route("/login", methods=["POST"])
 def login():

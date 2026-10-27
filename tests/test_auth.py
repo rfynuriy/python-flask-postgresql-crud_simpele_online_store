@@ -2,7 +2,7 @@
 def test_regiter_user_succses(client):
     pyload = {
         "username": "rfynury",
-        "email": "rafiemailgmail.com",
+        "email": "rafiemail@gmail.com",
         "password_hash": "dj_almira_berto1",
         "phone_number": "089527358614",
     }
@@ -24,6 +24,17 @@ def test_register_duplicate_username(client, dummy_user_customer):
     assert response.status_code == 409
     assert "message" in response.json
 
+def test_register_invalid_email(client):
+    pyload = {
+        "username": "rfyinfalid",
+        "email": "infalidgmail.com",
+        "password_hash": "admin123",
+        "phone_number": "080877358614",
+    }
+    response = client.post("/register", json=pyload)
+
+    assert response.status_code == 400
+    assert "email" in response.json
 
 # =================== /login =================== 
 def test_login_succses(client, dummy_user_customer):

@@ -20,19 +20,21 @@ class RegisterSchema(Schema):
     username = fields.Str(
         required=True,
         validate=validate.Length(
-            min=1, max=50,
-            error= "The username must be between one and fifty characters long"
+            min=3, max=30,
+            error= "The username must be between three and thirty characters long"
         )
     )
+
     email = fields.Email(required=True)
+
     password_hash = fields.Str(
         required=True,
-        validate=[
-            validate.Length(min=8, error="The password must have at least eight characters"),
-            validate.Length(max=700, error="The password must not exceed 700 characters")
-        ],
+        validate=validate.Length(
+            min=8, max=72,error="The password must be between 8 and 72 characters long"
+        ),
         load_only=True
     )
+
     phone_number = fields.Str(
         required=True,
         validate=[

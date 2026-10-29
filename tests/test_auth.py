@@ -36,6 +36,23 @@ def test_register_invalid_email(client):
     assert response.status_code == 400
     assert "email" in response.json
 
+def test_register_no_data(client):
+    response = client.post("/register")
+
+    assert response.status_code == 415
+    assert response.json is None
+
+def test_register_empty_data(client):
+    pyload = {}
+    response = client.post("/register", json=pyload)
+
+    assert response.status_code == 400
+    assert "username" in response.json
+    assert "email" in response.json
+    assert "password_hash" in response.json
+    assert "phone_number" in response.json
+
+
 # =================== /login =================== 
 def test_login_succses(client, dummy_user_customer):
     pyload = {

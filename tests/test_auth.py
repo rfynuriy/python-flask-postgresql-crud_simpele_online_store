@@ -59,10 +59,10 @@ def test_login_succses(client, dummy_user_customer):
         "username": dummy_user_customer.username,
         "password": "rahasia123"
         }
-    resposnse = client.post("/login", json=pyload)
+    response = client.post("/login", json=pyload)
 
-    assert resposnse.status_code == 200
-    assert "access_token" in resposnse.json
+    assert response.status_code == 200
+    assert "access_token" in response.json
 
 def test_incorrect_login_password(client, dummy_user_customer):
     pyload = {
@@ -79,7 +79,21 @@ def test_unregistered_login_username(client):
         "username": "unregistered username!",
         "password": "rahasia123"
     }
-    respose = client.post("/login", json=pyload)
+    response = client.post("/login", json=pyload)
 
-    assert respose.status_code == 401
-    assert respose.json["message"] == "Incorrect username or password"
+    assert response.status_code == 401
+    assert response.json["message"] == "Incorrect username or password"
+
+def test_login_no_data(client):
+    response = client.post("/login")
+
+    assert response.status_code == 415
+    assert response.json is None
+
+def test_login_empty_data(client):
+    pyload = {}
+    response = client.post("/login", json=pyload)
+
+    assert response.status_code == 400
+    assert "username" in response.json
+    assert "password" in response.json

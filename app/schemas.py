@@ -42,3 +42,14 @@ class RegisterSchema(Schema):
             validate.Length(min=10, max=20, error="The mobile phone number must be between 10 and 20 digits long")
         ]
     )
+
+# =================== login schemas =================== #
+
+class LoginSchema(Schema):
+    username = fields.Str(
+        required=True
+    )
+
+    password = fields.Str(
+        required=True
+    )

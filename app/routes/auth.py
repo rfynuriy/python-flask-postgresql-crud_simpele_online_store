@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.extensions import db, bcrypt
 from app.models import Users
-from app.schemas import RegisterSchema
+from app.schemas import RegisterSchema, LoginSchema
 
 
 auth_bp = Blueprint('auth', __name__)
@@ -44,6 +44,12 @@ def register():
 @auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
+
+    schema = LoginSchema()
+    error = schema.validate(data)
+    if error:
+        return jsonify(error), 400
+
     username = data["username"]
     raw_password = data["password"]
 

@@ -1,5 +1,5 @@
 import pytest
-from app.schemas import CheckoutSchema, RegisterSchema
+from app.schemas import CheckoutSchema, RegisterSchema, LoginSchema
 
 # =================== test checkout schemas =================== #
 
@@ -184,3 +184,28 @@ def test_register_schema_invalid_number(bad_number):
     errors = schema.validate(bad_number)
 
     assert "phone_number" in errors
+
+
+# =================== test login schemas =================== #
+
+def test_login_schema():
+    schema = LoginSchema()
+    good_data = {
+        "username": "rfynuriy",
+        "password": "admin123"
+    }
+    errors = schema.validate(good_data)
+
+    assert errors == {}
+
+# === all required
+@pytest.mark.parametrize("data, field", [
+    ({"username": "rfynuriy"}, "password"),
+    ({"password": "admin123"}, "username")
+])
+
+def test_login_field(data, field):
+    schema = LoginSchema()
+    errors = schema.validate(data)
+
+    assert field in errors

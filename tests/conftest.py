@@ -73,7 +73,7 @@ def dummy_product(dummy_user_seller):
     product = Products(
         seller_id= dummy_user_seller.id,
         product_name= "sikat_gigi",
-        price= 7000,
+        price= "7000",
         stok= 12,
         description= None
     )

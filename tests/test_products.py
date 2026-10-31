@@ -51,3 +51,19 @@ def test_add_product_without_auth(client, dummy_product):
 
     assert response.json["msg"] == "Missing Authorization Header"
     assert response.status_code == 401
+
+def test_add_product_decimal_price(client, auth_seller):
+    pyload = {
+        "product_name": "sabun",
+        "price": "19.99",
+        "stok": 40,
+        "description": "capable of killing 99 percent of germs"
+    }
+    response = client.post("/add/product", json=pyload, headers=auth_seller)
+
+    assert response.status_code == 200
+    assert type(response.json["price"]) == str
+
+    results = client.get("/view/products")
+    assert type(results.json[0]["price"]) == str
+    assert results.json[0]["price"] == "19.99"

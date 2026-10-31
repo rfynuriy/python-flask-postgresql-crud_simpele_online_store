@@ -26,7 +26,7 @@ def create_order(user_id, items):
                 orders_id= new_order.id,
                 products_id= product.id,
                 purchase_quantity= quantity,
-                purchase_price= float(product.price)
+                purchase_price= product.price
             )
             db.session.add(detail_order)
         db.session.commit()

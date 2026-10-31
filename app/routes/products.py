@@ -5,6 +5,8 @@ from sqlalchemy import select
 from app.models import Users, Products
 from app.extensions import db
 
+from decimal import Decimal
+
 products_bp = Blueprint('products', __name__)
 
 @products_bp.route("/add/product", methods=["POST"])
@@ -26,7 +28,7 @@ def add_product():
     results = Products(
         seller_id=current_user_id,
         product_name=product_name,
-        price=float(price),
+        price=Decimal(str(price)),
         stok=stok,
         description=description
         )

@@ -53,3 +53,37 @@ class LoginSchema(Schema):
     password = fields.Str(
         required=True
     )
+
+# =================== add product schemas =================== #
+
+class AddProductSchema(Schema):
+    product_name = fields.Str(
+        required=True,
+        validate=validate.Length(
+            min=1, max= 35,
+            error="The product name cannot be empty or exceed 35 characters"
+            )
+    )
+
+    price = fields.Decimal(
+        required=True,
+        places=2,
+        validate=validate.Range(min=0, error="price cannot be negative")
+    )
+
+    stok = fields.Int(
+        required=True,
+        validate=validate.Range(
+            min=0,
+            error="Product stock cannot be negative"
+        )
+    )
+
+    description = fields.Str(
+        required=False,
+        allow_none=True,
+        load_default=None,
+        validate=validate.Length(
+            max=1000,
+            error="Description is too long, maximum 1000 characters")
+    )

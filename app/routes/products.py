@@ -1,18 +1,17 @@
 from flask import jsonify, request, Blueprint
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy import select
+from marshmallow import ValidationError
 
 from app.models import Users, Products
 from app.extensions import db
-
-from decimal import Decimal
+from app.schemas import AddProductSchema
 
 products_bp = Blueprint('products', __name__)
 
 @products_bp.route("/add/product", methods=["POST"])
 @jwt_required()
 def add_product():
-    data = request.get_json()
     current_user_id = get_jwt_identity()
     current_user = db.session.get(Users, current_user_id)
     current_user_role = current_user.role.name
@@ -20,15 +19,21 @@ def add_product():
     if current_user_role != "SELLER":
         return jsonify({"message": "You are not a seller"}), 403
 
-    product_name = data["product_name"]
-    price = data["price"]
-    stok = data["stok"]
-    description = data.get("description")
+    data = request.get_json()
+    try:
+        clean = AddProductSchema().load(data)
+    except ValidationError as error:
+        return jsonify(error.messages), 400
+
+    product_name = clean["product_name"]
+    price = clean["price"]
+    stok = clean["stok"]
+    description = clean["description"]
 
     results = Products(
         seller_id=current_user_id,
         product_name=product_name,
-        price=Decimal(str(price)),
+        price=price,
         stok=stok,
         description=description
         )

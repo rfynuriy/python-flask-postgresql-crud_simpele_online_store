@@ -1,5 +1,6 @@
 import pytest
-from app.schemas import CheckoutSchema, RegisterSchema, LoginSchema
+from decimal import Decimal
+from app.schemas import CheckoutSchema, RegisterSchema, LoginSchema, AddProductSchema
 
 # =================== test checkout schemas =================== #
 
@@ -204,8 +205,134 @@ def test_login_schema():
     ({"password": "admin123"}, "username")
 ])
 
-def test_login_field(data, field):
+def test_login_schema_field(data, field):
     schema = LoginSchema()
     errors = schema.validate(data)
 
     assert field in errors
+
+
+# =================== test add product schemas =================== #
+
+def test_add_product_schema():
+    schema = AddProductSchema()
+    good_data = {
+        "product_name": "sabun",
+        "price" : "5000",
+        "stok" : 50,
+        "description": "capable of killing 99 percent of germs"
+    }
+    errors = schema.validate(good_data)
+
+    assert errors == {}
+
+# === all required
+
+@pytest.mark.parametrize("data, field", [
+    ({
+        "price" : "5000",
+        "stok" : 50
+    }, "product_name"),
+    ({
+        "product_name": "sabun",
+        "stok" : 50
+    }, "price"),
+    ({
+        "product_name": "sabun",
+        "price" : "5000"
+    }, "stok"),
+]) # test required product_name, price, stok
+
+def test_add_product_schema_field(data, field):
+    schema = AddProductSchema()
+    error = schema.validate(data)
+
+    assert field in error
+
+# === bad product_name
+
+@pytest.mark.parametrize("validate_product_name",[
+    {
+        "product_name": "",
+        "price" : "5000",
+        "stok" : 50,
+        "description": "capable of killing 99 percent of germs"
+    },
+    {
+        "product_name": "a" * 36,
+        "price" : "5000",
+        "stok" : 50,
+        "description": "capable of killing 99 percent of germs"
+    }
+])
+
+def test_add_schema_invalid_product_name(validate_product_name):
+    schema = AddProductSchema()
+    error = schema.validate(validate_product_name)
+
+    assert "product_name" in error
+
+# === price
+
+def test_add_product_schema_price_places():
+    schema = AddProductSchema()
+    data = {
+        "product_name": "sabun",
+        "price" : "59.556",
+        "stok" : 50,
+        "description": "capable of killing 99 percent of germs"
+    }
+    result = schema.load(data)
+
+    assert result["price"] == Decimal("59.56")
+
+def test_add_product_schema_negative_price():
+    schema = AddProductSchema()
+    Data_does_not_match = {
+        "product_name": "sabun",
+        "price" : "-1",
+        "stok" : 50,
+        "description": "capable of killing 99 percent of germs"
+    }
+    error = schema.validate(Data_does_not_match)
+
+    assert "price" in error
+
+# === stok
+
+def test_add_product_schema_negative_stok():
+    schema = AddProductSchema()
+    Data_does_not_match = {
+        "product_name": "sabun",
+        "price" : "5000",
+        "stok" : -1,
+        "description": "capable of killing 99 percent of germs"
+    }
+    error = schema.validate(Data_does_not_match)
+
+    assert "stok" in error
+
+# === description
+
+def test_add_product_schema_load_default_description():
+    schema = AddProductSchema()
+    data = {
+        "product_name": "sabun",
+        "price" : "5000",
+        "stok": 5
+    }
+    result = schema.load(data)
+
+    assert result["description"] is None
+
+def test_add_product_schema_validate(): #length maximum
+    schema = AddProductSchema()
+    Data_does_not_match = {
+        "product_name": "sabun",
+        "price" : "5000",
+        "stok": 5,
+        "description": "a" * 1001
+    }
+    error = schema.validate(Data_does_not_match)
+
+    assert "description" in error

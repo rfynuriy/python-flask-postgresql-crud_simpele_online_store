@@ -40,7 +40,20 @@ def test_add_product_without_seller(client, auth_customer):
     assert response.json["message"] == "You are not a seller"
     assert response.status_code == 403
 
-def test_add_product_without_auth(client, dummy_product):
+def test_add_product_error_code_sequence(client, auth_customer):
+    # First check error code 400 or 403
+    pyload = {
+        "product_name": "lulur",
+        "price": -1,
+        "stok": 98,
+        "description": "capable of brightening the skin"
+    }
+    response = client.post("/add/product", json=pyload, headers=auth_customer)
+
+    assert response.json["message"] == "You are not a seller"
+    assert response.status_code == 403
+
+def test_add_product_without_auth(client):
     pyload = {
         "product_name": "shampoo",
         "price": 15000,
@@ -67,3 +80,30 @@ def test_add_product_decimal_price(client, auth_seller):
     results = client.get("/view/products")
     assert type(results.json[0]["price"]) == str
     assert results.json[0]["price"] == "19.99"
+
+def test_add_product_mines_price(client, auth_seller):
+    pyload = {
+        "product_name": "sabun",
+        "price": "-1",
+        "stok": 40,
+        "description": "capable of killing 99 percent of germs"
+    }
+    response = client.post("/add/product", json=pyload, headers=auth_seller)
+
+    assert response.status_code == 400
+    assert "price" in response.json
+
+def test_add_product_three_decimal_places(client, auth_seller):
+    pyload = {
+        "product_name": "sabun",
+        "price": "19.558",
+        "stok": 40,
+        "description": "capable of killing 99 percent of germs"
+    }
+    response = client.post("/add/product", json=pyload, headers=auth_seller)
+    assert response.status_code == 200
+    assert response.json["price"] == "19.56"
+
+    results = client.get("/view/products")
+    assert results.json[0]["price"] == "19.56"
+    assert results.json[0]["price"] != "19.558"
